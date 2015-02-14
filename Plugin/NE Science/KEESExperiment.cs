@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
+
 namespace NE_Science
 {
     public class KEESExperiment : OMSExperiment
@@ -66,13 +67,22 @@ namespace NE_Science
                 case READY:
                     Events["StartExperiment"].active = true;
                     Events["DeployExperiment"].active = false;
+                    #if STOP_EXPERIMENT
+                    Events ["StopExperiment"].active = false;
+                    #endif
                     break;
                 case FINISHED:
                     Events["StartExperiment"].active = false;
                     Events["DeployExperiment"].active = true;
+                    #if STOP_EXPERIMENT
+                    Events ["StopExperiment"].active = false;
+                    #endif
                     break;
                 case RUNNING:
                     playAnimation(deployAnimation, 1f, 1f);
+                    #if STOP_EXPERIMENT
+                    Events ["StopExperiment"].active = true;
+                    #endif
                     break;
             }
             setEVAconfigForStart(true, 3);
@@ -129,8 +139,25 @@ namespace NE_Science
             {
                 createResources();
                 ScreenMessages.PostScreenMessage("Started experiment!", 6, ScreenMessageStyle.UPPER_CENTER);
+                #if STOP_EXPERIMENT
+                Events ["StopExperiment"].active = true;
+                #endif
             }
         }
+
+        #if STOP_EXPERIMENT
+        /**
+         * Interrupts a running experiment so that it can be restarted again later.
+         */
+        [KSPEvent(guiActive = true, guiName = "Stop Experiment", active = false)]
+        public void StopExperiment()
+        {
+            Events ["StartExperiment"].active = true;
+            Events ["StopExperiment"].active = false;
+            playAnimation(debloyAnimation, -1, 1);
+            state = READY;
+        }
+        #endif
 
         public void createResources()
         {
